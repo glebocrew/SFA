@@ -1,6 +1,7 @@
+# из модуля random импортируем случайный выбор элемента массива
 from random import choice as random_action
+# из модуля colorama импортируем специальные символы для разнообразного вывода информации в консоль
 from colorama import Fore as foreground
-from colorama import Back as background
 from colorama import Style as reset
 
 # победные комбинации:       
@@ -14,6 +15,7 @@ from colorama import Style as reset
 #   |-----------|-----------------|
 
 # Создаем словарь победных комбинаций
+# под архитектуру ключ побеждает значение 
 winners_list = \
 {
     "камень": "ножницы",
@@ -21,94 +23,199 @@ winners_list = \
     "бумага": "камень"
 }
 
+# список элементов в нашей игре
 items = ["камень", "ножницы", "бумага"]
 
-print(f"Здравствуйте! \nВас приветсвует {foreground.CYAN}консольный чат-бот{reset.RESET_ALL} для игры в камень-ножницы-бумага.\nДля старта напишите {foreground.BLUE}/start{reset.RESET_ALL} \nДля окончания игры напишите {foreground.BLUE}/end{reset.RESET_ALL}")
+# список команд
+commands = ["/start", "/end"]
 
+# функция для получения ключа искомого значения
 def get_key(d, value):
+    """
+    d - dictionary (словарь) где мы ищем:
+    v - значение, ключ которого нам надо получить
+    """ 
     for k, v in d.items():
+        # проходимся по ключам и значениям d
+        # и ищем значения, соответсвующие условиям
         if v == value:
+            # возвращаем нужное значение ключа, при благоприятном условии
             return k
 
+# выводим информацию об игре, а также объясняем пользователю о существующих командах чат бота [/start, /end]
+print(f"Здравствуйте! \nВас приветсвует {foreground.CYAN}консольный чат-бот{reset.RESET_ALL} для игры в камень-ножницы-бумага.\nДля старта напишите {foreground.BLUE}/start{reset.RESET_ALL} \nДля окончания игры напишите {foreground.BLUE}/end{reset.RESET_ALL}")
+
+
+# создаем переменную command, ожидающую от пользователья одну из команд
 command = input(">>>"  + foreground.GREEN)
+# очищаем стили
 print(reset.RESET_ALL)
-if command not in ["/start", "/end"]:
-    while (command not in ["/start", "/end"]):
+# проверяем, есть ли введенная команда в списке комманд
+if command not in commands:
+    # если команды нет, то мы запускаем цикл, ожидая от пользователя одну из команд
+    # (сделано для неправильно введенных комманд)
+    while (command not in commands):
+        # уведомляем о некорректном вводе
         print("Некорректный ввод!")
+        # присваиваем переменной значение из потока ввода
         command = input(">>>" + foreground.GREEN)
+        # чистим стили консоли
         print(reset.RESET_ALL)
 
+# переменная game_over это флажок закончена ли сейчас игра:
+# если она True - это значит что игра окончена
+# если она False - это значит что игра идет
 
+# game_over в начале игры может быть False только в одном случае:
+# когда была с самого начала введена команда /end
+game_over = (command == commands[1])
 
-print("Введите сложность игры. \n1 - Случайная(приближенная к реальности)\n2 - Легкая(бот крайне глупый) \n3 - Алгоритмический(бот пытается рассчитывать свои ходы)")
-
-hardness = input(">>>" + foreground.GREEN)
-print(reset.RESET_ALL)
-if hardness not in ["1", "2", "3"]:
-    while (hardness not in ["1", "2", "3"]):
-        print("Некорректный ввод!")
-        hardness = input(">>>"+ foreground.GREEN)
-        print(reset.RESET_ALL)
-
-
-
-game_over = False
+# инициализируем переменные очков бота и пользователя
 computer_points, user_points = 0, 0
+
+# для режима игры, когда компьютер выдает один и тот же вариант
+# выбираем случайное действие, которое бот будет повторять 
 computer_action = random_action(items)
+
+# в данный массив будут записываться вся история ходов пользователя
+# это нужно для того, чтобы потом анализировать ходы пользователя
+# и на их основе делать умный ход ботом
 previous_user = []
+
+# инициализируем переменную в которую мы будем предугадывать следующий ход игрока
 user_prediction = ""
 
-
-
-while not game_over:
-    print("Введите ваш ход (ТОЛЬКО 'камень', 'ножницы' или 'бумага')")
-    user_input = input(">>>" + foreground.GREEN)
+# если человек с самого начала ввел /end игра завершится
+if game_over:
+    # Выводим сообщение
+    print("До скорых встреч! \nЖаль, что вы не захотели поиграть((")
+# если человек захотел играть и написал /start
+else:
+    # выводим сообщение о выборе сложности игры 
+    print("Введите сложность игры. \n1 - Случайная(приближенная к реальности)\n2 - Легкая(бот крайне глупый и повторяет одно и то же - подойдёт для новичков, чтобы ознакомится с правилами игры) \n3 - Алгоритмический(бот пытается рассчитывать свои ходы)")
+    # даем пользователю ввести информацию в переменную hardness
+    hardness = input(">>>" + foreground.GREEN)
+    # чистим стили консоли
     print(reset.RESET_ALL)
-    user_input = user_input.lower()
-    if user_input == "/end":
-        game_over = True
-    else:
-        if user_input.lower() in winners_list:
-            if hardness == "1":
-                computer_action = random_action(items)
-            elif hardness == "2":
-                pass
-            elif hardness == "3": 
-                if len(previous_user) < 2:
-                    computer_action = random_action(items)
-                else:
-                    if previous_user[len(previous_user)-1] == \
-                        previous_user[len(previous_user)-2]:
 
-                        user_prediction = previous_user[len(previous_user)-1]
-                        computer_action = get_key(winners_list,user_prediction)
-                    else: 
-                        current_count = \
-                        {
-                            "камень": 0,
-                            "ножницы": 0,
-                            "бумага": 0
-                        }
-                        for x in previous_user:
-                            if x == items[0]:
-                                current_count["камень"] += 1
-                            elif x == items[1]:
-                                current_count["ножницы"] += 1
-                            elif x == items[2]:
-                                current_count["бумага"] += 1
+    # проверяем есть ли такая опция выбора
+    if hardness not in ["1", "2", "3"]:
+        # пока пользователь не введёт одну из опций выбора сложности
+        # программа будет предлагать ввести опцию снова
+        while (hardness not in ["1", "2", "3"]):
+            # выводим сообщение пользователю
+            print("Некорректный ввод!")
+            # считываем новое значение hardness из потока ввода
+            hardness = input(">>>"+ foreground.GREEN)
+            # чистим стили
+            print(reset.RESET_ALL)
+    # начинаем цикл игры 
+    while not game_over:
+        # информируем пользователя о формате ввода
+        # в данном случае нужно вводить слова полностью 
+        # но при этом не важен регистр букв 
+        print(f"Введите ваш ход (ТОЛЬКО 'камень', 'ножницы' или 'бумага') \nВведите {foreground.BLUE}/end{reset.RESET_ALL} чтобы закончить игру")
 
-                        computer_action = get_key(current_count, min(current_count.values()))
-                previous_user.append(user_input)
-            print(f"{foreground.CYAN}Бот{reset.RESET_ALL} сделал свой ход: {foreground.CYAN}{computer_action}{reset.RESET_ALL}")
-            if winners_list[computer_action] == user_input:
-                print(f"В данном случае {foreground.CYAN}{computer_action}{reset.RESET_ALL} бьёт {foreground.GREEN}{user_input}{reset.RESET_ALL}.\nК сожалению, {foreground.RED}вы проиграли{reset.RESET_ALL} этот ход( \nПопробуйте выиграть следующий ход!")
-                user_points += 1
-            elif winners_list[user_input] == computer_action:
-                print(f"Ну кто же не знает, что {foreground.GREEN}{user_input}{reset.RESET_ALL} бьёт {foreground.CYAN}{computer_action}{reset.RESET_ALL}! \nПоздравляю! {foreground.GREEN}Вы выиграли{reset.RESET_ALL} этот ход! \nСможете победить в следующем?)")
-                computer_points += 1
-            else:
-                print("Каша малаша! Вы выдали одинаковые фигуры!")
+        # даем пользователю сделать ход и записываем в переменную user_input
+        user_input = input(">>>" + foreground.GREEN)
+
+        # чистим стили консоли
+        print(reset.RESET_ALL)
+
+        # превращаем буквы в нижний регистр
+        user_input = user_input.lower()
+
+        # если вдруг пользователь захотел закончить игру и написал /end
+        # мы присваиваем переменной game_over значение True => 
+        # цикл игры прервётся
+        if user_input == commands[1]:
+            # поднимаем флаг game_over
+            game_over = True
+        # если ввод - это что-то другое мы запускаем цикл игры
         else:
-            print("Вы ввели неправильное действие!")
+            # если ввод допустимым, запускаем рассчёт хода бота
+            if user_input in items:
+                # проверяем какая сложность стоит
+                # если сложность 1 (Случайные ходы), то ход компьютера будет
+                # если сложность 2 (Одинаковые ходы), то ход компьютера будет изначально определенной переменной всегда 
+                # если сложность 3 (Осознанные ходы), то бот будет анализировать предыдущие ходы алгоритмом описанным далее *
+                if hardness == "1": 
+                    computer_action = random_action(items)
+                elif hardness == "2":
+                    pass
+                elif hardness == "3": 
+                    # * - алгоритм анализирует два основных параметра
+                    # во-первых, алгоритм проверяет, если 2 предыдущих элемента одинаковы,
+                    # то с большой вероятностью, следующий ход игрока будет таким же (мой опыт игры в крестики-нолики об этом говорит)
+                    # если длина списка меньше чем 2, то мы делаем случайный ход
+                    # ______________________________________________________
+                    # если выясняется, что предыдущие 2 элемента не равны друг другу, то
+                    # мы считаем все "камни" "ножницы" и "бумаги" в прошлых ходах
+                    # психологически, обычно человек пытается выдавать разнообразные действия,
+                    # поэтому мы находим минимально популярную опцию и делаем ход, который её побеждает
 
-print(f"Игра окончена! \nРезультаты: \n{foreground.GREEN}Вы{reset.RESET_ALL}:{user_points}\n{foreground.CYAN}Компьютер{reset.RESET_ALL}:{computer_points}")
+                    # проверка списка для дальнейшего анализа 2 предыдущих элементов
+                    if len(previous_user) < 2:
+                        # если длина списка меньше чем 2, то мы делаем случайный ход
+                        computer_action = random_action(items)
+                    # если список можно анализировать, проверяем условие
+                    else:
+                        # если два предыдущих элемента совпадают, то предугадываем следующий ход
+                        if previous_user[len(previous_user)-1] == \
+                            previous_user[len(previous_user)-2]:
+
+                            # находим предполагаемый следующий ход
+                            user_prediction = previous_user[len(previous_user)-1]
+
+                            # исходя их предположения находим ключ победного элемента
+                            computer_action = get_key(winners_list,user_prediction)
+                        # если два предыдущих элемента не совпадают
+                        else: 
+                            # создаем счётчики всех предыдущих ходов в словаре
+                            current_count = \
+                            {
+                                "камень": 0,
+                                "ножницы": 0,
+                                "бумага": 0
+                            }
+                            # считаем элементы
+                            for x in previous_user:
+                                # считаем "камни"
+                                if x == items[0]:
+                                    current_count["камень"] += 1
+                                # считаем "ножницы"
+                                elif x == items[1]:
+                                    current_count["ножницы"] += 1
+                                # считаем "бумаги"
+                                elif x == items[2]:
+                                    current_count["бумага"] += 1
+
+                            # ход бота будет элементом, который побеждает наименее встречающийся
+                            computer_action = get_key(winners_list, get_key(current_count, min([v for k,v in current_count.items()])))
+                    # в любом случае, добавляем ход в историю
+                    previous_user.append(user_input)
+                # выводим ход бота
+                print(f"{foreground.CYAN}Бот{reset.RESET_ALL} сделал свой ход: {foreground.CYAN}{computer_action}{reset.RESET_ALL}")
+                # проверяем если ход бота бьёт ход игрока
+                if winners_list[computer_action] == user_input:
+                    # выводим информацию о проигрыше игрока
+                    # инкрементируем очки бота 
+                    print(f"В данном случае {foreground.CYAN}{computer_action}{reset.RESET_ALL} бьёт {foreground.GREEN}{user_input}{reset.RESET_ALL}.\nК сожалению, {foreground.RED}вы проиграли{reset.RESET_ALL} этот ход( \nПопробуйте выиграть следующий ход!")
+                    computer_points += 1
+                
+                # проверяем если ход игрока побеждает ход бота
+                elif winners_list[user_input] == computer_action:
+                    # выводим информацию о выигрыше игрока
+                    # инкрементируем очки игрока
+                    print(f"Ну кто же не знает, что {foreground.GREEN}{user_input}{reset.RESET_ALL} бьёт {foreground.CYAN}{computer_action}{reset.RESET_ALL}! \nПоздравляю! {foreground.GREEN}Вы выиграли{reset.RESET_ALL} этот ход! \nСможете победить в следующем?)")
+                    user_points += 1
+                # если ни бот ни игрок не победил, значит, что ходы совпали
+                else:
+                    # выводим информацию о совпадении ходов
+                    # PS в моем дворе всегда говорили "Каша Малаша" когда ходы совпадали
+                    print("Каша малаша! Вы выдали одинаковые фигуры!")
+            # если ввод неправильного формата, выводим информацию об ошибке формата ввода
+            else:
+                print("Вы ввели неправильное действие!")
+    # когда игрок завершит игру (напишет /end) мы выводим счет
+    print(f"Игра окончена! \nРезультаты: \n{foreground.GREEN}Вы{reset.RESET_ALL}:{user_points}\n{foreground.CYAN}Компьютер{reset.RESET_ALL}:{computer_points}")
